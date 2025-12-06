@@ -40,7 +40,7 @@ def warp_image_pc(img, flow):
         Warped RGB image with the same shape and dtype as ``img``.
     """
     m, n = img.shape[:2]
-    xi, yi = np.meshgrid(np.arange(n).astype(np.float), np.arange(m).astype(np.float))
+    xi, yi = np.meshgrid(np.arange(n).astype(float), np.arange(m).astype(float))
 
     tmp = np.empty(img.shape, img.dtype)
     for i in range(3):
@@ -75,7 +75,7 @@ def warp_image_pc_single(img, flow):
         Warped image with the same shape and dtype as ``img``.
     """
     m, n = img.shape[:2]
-    xi, yi = np.meshgrid(np.arange(n).astype(np.float), np.arange(m).astype(np.float))
+    xi, yi = np.meshgrid(np.arange(n).astype(float), np.arange(m).astype(float))
 
     tmp = np.empty(img.shape, img.dtype)
 
