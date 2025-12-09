@@ -564,6 +564,38 @@ class OnlineLandmarkMagnifier(BasicMagnifier):
         return lm_viz, self.ref
 
 
+class OnlineMotionMagnifier:
+    def __init__(self, flow_strategy, alpha=10.0, warper_factory=None):
+        self.flow_strategy = flow_strategy
+        self.alpha = alpha
+        self._warper = None
+        self._warper_factory = warper_factory or (lambda hw: OnlineFrameWarper(hw))
+        self._depth_provider = None
+
+    def set_depth_provider(self, fn):
+        self._depth_provider = fn
+
+    def update_reference(self, ref, landmarks=None):
+        self.flow_strategy.update_reference(ref, landmarks)
+        if self._warper is None:
+            self._warper = self._warper_factory(ref.shape[:2])
+
+    def __call__(self, frame, alpha=None, landmarks=None, depth=None):
+        if self._warper is None:
+            self.update_reference(frame, landmarks)
+        flow_global, flow_local = self.flow_strategy(frame, landmarks)
+        a = self.alpha if alpha is None else alpha
+        flow = flow_global + flow_local
+        base = warp_image_backwards(frame, flow)
+        if depth is None and self._depth_provider is not None:
+            depth = self._depth_provider()
+        return self._warper.warp_image_uv(
+            base,
+            flow_global + a * flow_local,
+            depth,
+        )
+
+
 class FacialMeshProcessor:
     mouth_boundary_inner = [
         167,
