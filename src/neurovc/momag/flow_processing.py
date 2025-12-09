@@ -16,7 +16,7 @@ from neurovc.util.IO_util import CircularFrameBuffer
 __author__ = "Philipp Flotho"
 
 
-def _gray_augmentor(frame):
+def gray_augmentor(frame):
     return cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
 
 
@@ -369,13 +369,13 @@ class MagnificationTask:
         self.last_global_depth = None
 
         magnifiers = [
-            OnlineGlobalMagnifier(augmentor=_gray_augmentor),
-            OnlineLandmarkMagnifier(nvc.LM_EYE_LEFT, augmentor=_gray_augmentor),
-            OnlineLandmarkMagnifier(nvc.LM_EYE_RIGHT, augmentor=_gray_augmentor),
-            OnlineLandmarkMagnifier(nvc.LM_FOREHEAD, augmentor=_gray_augmentor),
+            OnlineGlobalMagnifier(augmentor=gray_augmentor),
+            OnlineLandmarkMagnifier(nvc.LM_EYE_LEFT, augmentor=gray_augmentor),
+            OnlineLandmarkMagnifier(nvc.LM_EYE_RIGHT, augmentor=gray_augmentor),
+            OnlineLandmarkMagnifier(nvc.LM_FOREHEAD, augmentor=gray_augmentor),
             OnlineLandmarkMagnifier(
                 landmarks=nvc.LM_MOUTH,
-                augmentor=_gray_augmentor,
+                augmentor=gray_augmentor,
             ),
         ]
 
