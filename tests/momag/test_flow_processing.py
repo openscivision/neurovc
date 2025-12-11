@@ -89,3 +89,94 @@ def test_extract_landmarks_success():
 def test_extract_landmarks_raises_without_faces():
     with pytest.raises(ValueError):
         fp._extract_landmarks(None)
+
+
+class _DummyWarper:
+    def __init__(self):
+        self.calls = []
+
+    def warp_image_uv(self, base, uv, depth):
+        self.calls.append((base, uv, depth))
+        return {"base": base, "uv": uv, "depth": depth}
+
+
+class _DummyFlowStrategy:
+    def __init__(self, flow_global, flow_local):
+        self.flow_global = flow_global
+        self.flow_local = flow_local
+        self.updated_refs = []
+        self.calls = []
+
+    def update_reference(self, ref, landmarks=None):
+        self.updated_refs.append((ref, landmarks))
+
+    def __call__(self, frame, landmarks=None):
+        self.calls.append((frame, landmarks))
+        return self.flow_global, self.flow_local
+
+
+def test_online_motion_magnifier_initializes_and_warps_with_default_alpha():
+    frame = np.arange(12, dtype=np.float32).reshape(2, 2, 3)
+    flow_global = np.zeros((2, 2, 2), dtype=np.float32)
+    flow_local = np.ones((2, 2, 2), dtype=np.float32)
+
+    strategy = _DummyFlowStrategy(flow_global, flow_local)
+    warper = _DummyWarper()
+    warper_factory_calls = []
+
+    def warper_factory(hw):
+        warper_factory_calls.append(hw)
+        return warper
+
+    magnifier = fp.OnlineMotionMagnifier(
+        strategy,
+        alpha=2.0,
+        warper_factory=warper_factory,
+    )
+
+    result = magnifier(frame, landmarks="lm")
+
+    expected_base = fp.warp_image_backwards(frame, flow_global + flow_local)
+    expected_uv = flow_global + 2.0 * flow_local
+
+    assert strategy.updated_refs == [(frame, "lm")]
+    assert strategy.calls == [(frame, "lm")]
+    assert warper_factory_calls == [frame.shape[:2]]
+    assert len(warper.calls) == 1
+    assert np.allclose(result["base"], expected_base)
+    assert np.allclose(result["uv"], expected_uv)
+    assert result["depth"] is None
+
+
+def test_online_motion_magnifier_uses_depth_provider_and_alpha_override():
+    frame = np.ones((2, 2, 3), dtype=np.float32)
+    flow_global = np.zeros((2, 2, 2), dtype=np.float32)
+    flow_local = 0.5 * np.ones((2, 2, 2), dtype=np.float32)
+    depth_map = np.full(frame.shape[:2], 0.3, dtype=np.float32)
+
+    strategy = _DummyFlowStrategy(flow_global, flow_local)
+    warper = _DummyWarper()
+    depth_calls = []
+
+    def warper_factory(hw):
+        return warper
+
+    def depth_provider():
+        depth_calls.append(True)
+        return depth_map
+
+    magnifier = fp.OnlineMotionMagnifier(
+        strategy,
+        alpha=10.0,
+        warper_factory=warper_factory,
+    )
+    magnifier.set_depth_provider(depth_provider)
+
+    result = magnifier(frame, alpha=0.25)
+
+    expected_uv = flow_global + 0.25 * flow_local
+
+    assert depth_calls == [True]
+    assert np.allclose(result["uv"], expected_uv)
+    assert np.allclose(result["depth"], depth_map)
+    assert len(warper.calls) == 1
