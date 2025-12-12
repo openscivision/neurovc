@@ -46,7 +46,9 @@ def default_alpha_policy(alpha: float, max_alpha: float) -> Tuple[float, int]:
     raise ValueError(f"alpha={alpha} exceeds supported range (max={max_alpha})")
 
 
-def _to_tensor(img: Any, device: torch.device) -> torch.Tensor:
+def _to_tensor(img: Any, device: torch.device) -> Tuple[torch.Tensor, bool]:
+    """Convert HWC BGR/RGB/CHW to CHW float tensor; returns (tensor, swapped_to_rgb)."""
+    swapped = False
     if isinstance(img, torch.Tensor):
         t = img
         if t.ndim == 3 and t.shape[0] in (1, 3):
@@ -57,15 +59,20 @@ def _to_tensor(img: Any, device: torch.device) -> torch.Tensor:
         arr = np.asarray(img)
         if arr.ndim != 3 or arr.shape[-1] not in (1, 3):
             raise ValueError("expected HxWxC image with 1 or 3 channels")
+        # assume OpenCV BGR input; swap to RGB for the model
+        arr = arr[..., ::-1]
+        swapped = True
         t = torch.from_numpy(arr).permute(2, 0, 1)
     t = t.float()
     if t.max() > 1.5:
         t = t / 255.0
-    return t.to(device)
+    return t.to(device), swapped
 
 
-def _to_numpy(img: torch.Tensor, ref_like: Any) -> np.ndarray:
+def _to_numpy(img: torch.Tensor, ref_like: Any, *, swap_to_bgr: bool) -> np.ndarray:
     arr = img.detach().cpu().permute(1, 2, 0).numpy()
+    if swap_to_bgr:
+        arr = arr[..., ::-1]
     if isinstance(ref_like, np.ndarray) and ref_like.dtype == np.uint8:
         arr = np.clip(arr * 255.0, 0, 255).astype(np.uint8)
     return arr
@@ -161,14 +168,16 @@ class FlowMagOnline:
         self._ref: torch.Tensor | None = None
         self._ref_like: Any = None
         self._target_hw: Tuple[int, int] | None = None
+        self._ref_was_bgr: bool = False
 
         self.model.eval()
 
     def update_reference(self, ref: Any, landmarks: Any | None = None) -> None:
-        ref_t = _to_tensor(ref, self.device)
+        ref_t, ref_swapped = _to_tensor(ref, self.device)
         ref_t = _crop_to_multiple(ref_t, multiple=8)
         self._ref = ref_t
         self._ref_like = ref
+        self._ref_was_bgr = ref_swapped
         _, h, w = ref_t.shape
         self._target_hw = (h, w)
 
@@ -201,7 +210,7 @@ class FlowMagOnline:
     ) -> Any:
         if self._ref is None:
             self.update_reference(frame, landmarks)
-        frame_t = _to_tensor(frame, self.device)
+        frame_t, frame_swapped = _to_tensor(frame, self.device)
         ref_t = self._ref
         if ref_t is None:
             raise RuntimeError("Reference frame is not set.")
@@ -212,7 +221,7 @@ class FlowMagOnline:
 
         mask_t: torch.Tensor | None = None
         if mask is not None:
-            mask_t = _to_tensor(mask, self.device)
+            mask_t, _ = _to_tensor(mask, self.device)
             mask_t = _crop_to_multiple(mask_t, multiple=8, target_hw=self._target_hw)
             if mask_t.ndim == 3 and mask_t.shape[0] != 1:
                 mask_t = mask_t[0:1]
@@ -222,7 +231,9 @@ class FlowMagOnline:
             pred = self._forward_pair(ref_t, frame_t, alpha=used_alpha, mask=mask_t)
 
         output = _to_numpy(
-            pred, self._ref_like if self._ref_like is not None else frame
+            pred,
+            self._ref_like if self._ref_like is not None else frame,
+            swap_to_bgr=self._ref_was_bgr or frame_swapped,
         )
         if return_info:
             info = {
