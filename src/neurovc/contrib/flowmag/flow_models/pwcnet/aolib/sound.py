@@ -440,7 +440,7 @@ class Sound:
         scipy.io.wavfile.write(fname, s.rate, s.samples)
 
     def resampled(self, new_rate, clip=True):
-        from . import subband
+        from neurovc.contrib.flowmag.flow_models.pwcnet.aolib import subband
 
         if new_rate == self.rate:
             return copy.deepcopy(self)

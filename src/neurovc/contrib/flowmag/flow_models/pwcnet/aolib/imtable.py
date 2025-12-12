@@ -5,7 +5,7 @@ import glob
 import webbrowser
 import os
 import random
-from . import util as ut, img as ig
+from neurovc.contrib.flowmag.flow_models.pwcnet.aolib import img as ig, util as ut
 
 # PUBLIC_URL = 'http://vision13.csail.mit.edu/aho/tab'
 # WWW_PATH = '/data/vision/billf/aho-vis/tables'

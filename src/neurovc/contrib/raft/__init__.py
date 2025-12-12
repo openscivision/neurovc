@@ -1,5 +1,5 @@
 try:
-    from .raft_helpers import RAFTOpticalFlow as _RAFTOpticalFlow
+    from neurovc.contrib.raft.raft_helpers import RAFTOpticalFlow as _RAFTOpticalFlow
 
     HAS_TORCH = True
 except Exception:  # noqa: BLE001

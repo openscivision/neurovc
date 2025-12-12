@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from neurovc.raft.update import BasicUpdateBlock, SmallUpdateBlock
-from neurovc.raft.extractor import BasicEncoder, SmallEncoder
-from neurovc.raft.corr import CorrBlock, AlternateCorrBlock
-from neurovc.raft.utils.utils import coords_grid, upflow8
+from neurovc.contrib.raft.update import BasicUpdateBlock, SmallUpdateBlock
+from neurovc.contrib.raft.extractor import BasicEncoder, SmallEncoder
+from neurovc.contrib.raft.corr import CorrBlock, AlternateCorrBlock
+from neurovc.contrib.raft.utils.utils import coords_grid, upflow8
 
 try:
     autocast = torch.cuda.amp.autocast

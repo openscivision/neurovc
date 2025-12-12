@@ -11,7 +11,9 @@ import sys
 import numpy as np
 
 try:
-    from .correlation import correlation  # the custom cost volume layer
+    from neurovc.contrib.flowmag.flow_models.pwcnet.pytorch_pwc.correlation import (
+        correlation,
+    )  # the custom cost volume layer
 except ImportError:
     sys.path.insert(0, "./correlation")
     import correlation  # you should consider upgrading python

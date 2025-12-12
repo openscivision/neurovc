@@ -20,7 +20,7 @@ import multiprocessing
 import numpy as np
 import contextlib
 import numpy.linalg as linalg
-from . import img as ig
+from neurovc.contrib.flowmag.flow_models.pwcnet.aolib import img as ig
 import scipy.sparse
 import inspect
 import glob as _glob
@@ -3533,7 +3533,7 @@ def jet(im, lo=None, hi=None):
 
 
 def parula(im, lo=None, hi=None):
-    from . import parula
+    from neurovc.contrib.flowmag.flow_models.pwcnet.aolib import parula
 
     return np.uint8(255 * apply_cmap(im, parula.parula_map, lo, hi))
 
@@ -3762,7 +3762,7 @@ def foo():
 
 def test(x, cache={}):
     if "x" not in cache:
-        from . import iputil as ip
+        from neurovc.contrib.flowmag.flow_models.pwcnet.aolib import iputil as ip
 
         ip.run_reload()
         cache["x"] = 1
@@ -3775,7 +3775,7 @@ class Reloader:
 
     def run(self):
         if not self.done:
-            from . import iputil as ip
+            from neurovc.contrib.flowmag.flow_models.pwcnet.aolib import iputil as ip
 
             ip.run_reload()
             self.done = True

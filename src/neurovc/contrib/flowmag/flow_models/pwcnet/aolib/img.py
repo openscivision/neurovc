@@ -3,7 +3,7 @@ import os
 import pylab
 import webbrowser
 from PIL import Image, ImageDraw, ImageFont
-from . import util as ut
+from neurovc.contrib.flowmag.flow_models.pwcnet.aolib import util as ut
 
 # import scipy.misc, scipy.misc.pilutil # not sure if this is necessary
 import scipy.ndimage
@@ -14,7 +14,7 @@ from io import BytesIO
 
 
 def show(*args, **kwargs):
-    from . import imtable
+    from neurovc.contrib.flowmag.flow_models.pwcnet.aolib import imtable
 
     return imtable.show(*args, **kwargs)
 

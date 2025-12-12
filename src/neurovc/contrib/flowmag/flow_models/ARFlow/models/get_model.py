@@ -1,4 +1,4 @@
-from .pwclite import PWCLite
+from neurovc.contrib.flowmag.flow_models.ARFlow.models.pwclite import PWCLite
 
 
 def get_model(cfg):

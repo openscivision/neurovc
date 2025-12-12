@@ -2,11 +2,20 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .backbone import CNNEncoder
-from .transformer import FeatureTransformer, FeatureFlowAttention
-from .matching import global_correlation_softmax, local_correlation_softmax
-from .geometry import flow_warp
-from .utils import normalize_img, feature_add_position
+from neurovc.contrib.flowmag.flow_models.gmflow.backbone import CNNEncoder
+from neurovc.contrib.flowmag.flow_models.gmflow.geometry import flow_warp
+from neurovc.contrib.flowmag.flow_models.gmflow.matching import (
+    global_correlation_softmax,
+    local_correlation_softmax,
+)
+from neurovc.contrib.flowmag.flow_models.gmflow.transformer import (
+    FeatureFlowAttention,
+    FeatureTransformer,
+)
+from neurovc.contrib.flowmag.flow_models.gmflow.utils import (
+    feature_add_position,
+    normalize_img,
+)
 
 
 class GMFlow(nn.Module):

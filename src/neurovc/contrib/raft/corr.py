@@ -1,6 +1,6 @@
 import torch
 import torch.nn.functional as F
-from neurovc.raft.utils.utils import bilinear_sampler
+from neurovc.contrib.raft.utils.utils import bilinear_sampler
 
 try:
     import alt_cuda_corr  # type: ignore[import]

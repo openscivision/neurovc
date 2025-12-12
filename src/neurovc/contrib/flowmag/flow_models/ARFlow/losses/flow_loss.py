@@ -1,6 +1,11 @@
 import torch.nn as nn
 import torch.nn.functional as F
-from .loss_blocks import SSIM, smooth_grad_1st, smooth_grad_2nd, TernaryLoss
+from neurovc.contrib.flowmag.flow_models.ARFlow.losses.loss_blocks import (
+    SSIM,
+    TernaryLoss,
+    smooth_grad_1st,
+    smooth_grad_2nd,
+)
 from utils.warp_utils import flow_warp
 from utils.warp_utils import get_occu_mask_bidirection, get_occu_mask_backward
 

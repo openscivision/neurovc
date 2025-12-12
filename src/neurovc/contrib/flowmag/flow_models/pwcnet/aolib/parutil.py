@@ -330,11 +330,11 @@ def global_partition(n=None, i=None):
 
 def test_partition():
     def f(x):
-        from . import parutil
+        from neurovc.contrib.flowmag.flow_models.pwcnet.aolib import parutil
 
         return sum(parutil.partition(2, 1).map_sync(lambda x: x, list(range(10))))
 
-    from . import parutil
+    from neurovc.contrib.flowmag.flow_models.pwcnet.aolib import parutil
 
     parutil.map_sync(lambda x: x, list(range(10000)))
     assert sum(parutil.partition(2, 0).map_sync(f, list(range(1000)))) == 1000 * sum(

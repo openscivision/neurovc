@@ -9,8 +9,10 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from utils.warp_utils import flow_warp
 
-# from .correlation_package.correlation import Correlation
-from .correlation_native import Correlation
+# from neurovc.contrib.flowmag.flow_models.ARFlow.models.correlation_package.correlation import Correlation
+from neurovc.contrib.flowmag.flow_models.ARFlow.models.correlation_native import (
+    Correlation,
+)
 
 
 def conv(in_planes, out_planes, kernel_size=3, stride=1, dilation=1, isReLU=True):

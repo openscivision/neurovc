@@ -1,5 +1,10 @@
 import torch.nn as nn
-from .unet_parts import Up, Down, DoubleConv, OutConv
+from neurovc.contrib.flowmag.models.unet_parts import (
+    DoubleConv,
+    Down,
+    OutConv,
+    Up,
+)
 
 
 ACTIVATION_MAP = {"relu": nn.ReLU, "tanh": nn.Tanh, "sigmoid": nn.Sigmoid}

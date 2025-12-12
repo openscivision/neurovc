@@ -1,5 +1,5 @@
 import torch
-from .position import PositionEmbeddingSine
+from neurovc.contrib.flowmag.flow_models.gmflow.position import PositionEmbeddingSine
 
 
 def split_feature(

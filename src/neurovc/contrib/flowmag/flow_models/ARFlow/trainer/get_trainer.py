@@ -1,5 +1,9 @@
-from . import sintel_trainer, sintel_trainer_ar
-from . import kitti_trainer, kitti_trainer_ar
+from neurovc.contrib.flowmag.flow_models.ARFlow.trainer import (
+    kitti_trainer,
+    kitti_trainer_ar,
+    sintel_trainer,
+    sintel_trainer_ar,
+)
 
 
 def get_trainer(name):

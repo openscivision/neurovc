@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .utils import split_feature, merge_splits
+from neurovc.contrib.flowmag.flow_models.gmflow.utils import merge_splits, split_feature
 
 
 def single_head_full_attention(q, k, v):

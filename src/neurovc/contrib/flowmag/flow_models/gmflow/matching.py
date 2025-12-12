@@ -1,7 +1,11 @@
 import torch
 import torch.nn.functional as F
 
-from .geometry import coords_grid, generate_window_grid, normalize_coords
+from neurovc.contrib.flowmag.flow_models.gmflow.geometry import (
+    coords_grid,
+    generate_window_grid,
+    normalize_coords,
+)
 
 
 def global_correlation_softmax(

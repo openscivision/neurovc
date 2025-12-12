@@ -1,7 +1,9 @@
 import time
 import torch
 from copy import deepcopy
-from .base_trainer import BaseTrainer
+from neurovc.contrib.flowmag.flow_models.ARFlow.trainer.base_trainer import (
+    BaseTrainer,
+)
 from utils.flow_utils import evaluate_flow
 from utils.misc_utils import AverageMeter
 from transforms.ar_transforms.sp_transfroms import RandomAffineFlow

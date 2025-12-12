@@ -10,9 +10,9 @@ import argparse
 
 import torch
 
-from neurovc.raft.raft import RAFT
-from neurovc.raft.utils.flow_viz import flow_to_image
-from neurovc.raft.utils.utils import InputPadder
+from neurovc.contrib.raft.raft import RAFT
+from neurovc.contrib.raft.utils.flow_viz import flow_to_image
+from neurovc.contrib.raft.utils.utils import InputPadder
 
 import cv2
 

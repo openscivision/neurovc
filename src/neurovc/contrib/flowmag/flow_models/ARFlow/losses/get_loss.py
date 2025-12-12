@@ -1,4 +1,4 @@
-from .flow_loss import unFlowLoss
+from neurovc.contrib.flowmag.flow_models.ARFlow.losses.flow_loss import unFlowLoss
 
 
 def get_loss(cfg):
