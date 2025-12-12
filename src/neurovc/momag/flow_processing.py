@@ -13,6 +13,9 @@ import neurovc as nvc
 from neurovc.momag.framewarpers import OnlineFrameWarper, warp_image_backwards
 from neurovc.util.IO_util import CircularFrameBuffer
 
+from abc import ABC
+from typing import Tuple
+
 __author__ = "Philipp Flotho"
 
 
@@ -250,6 +253,74 @@ class FlowDecomposer:
         )[idx[:, 0], idx[:, 1]]
 
         return img_out.astype(img.dtype)
+
+
+class OpticalFlow(ABC):
+    def calc(self, ref, frame, last_flow=None) -> np.array | Tuple: ...
+
+
+class DISOpticalFlow(OpticalFlow):
+    def __init__(
+        self,
+        preset=cv2.DISOpticalFlow_PRESET_MEDIUM,
+        alpha=0.5,
+        delta=0.2,
+        gamma=0.8,
+        iterations=5,
+    ):
+        super().__init__()
+        self.OF_inst = cv2.DISOpticalFlow.create(preset)
+        self.OF_inst.setUseSpatialPropagation(True)
+        self.OF_inst.setFinestScale(1)
+        self.OF_inst.setVariationalRefinementDelta(delta)
+        self.OF_inst.setVariationalRefinementGamma(gamma)
+        self.OF_inst.setVariationalRefinementAlpha(alpha)
+        self.OF_inst.setVariationalRefinementIterations(iterations)
+
+    def calc(self, ref, frame, last_flow=None):
+        return self.OF_inst.calc(ref, frame, last_flow)
+
+
+class AlphaScaleOpticalFlow(OpticalFlow):
+    """Compute two DIS flows with different smoothness weights."""
+
+    def __init__(
+        self,
+        preset=cv2.DISOpticalFlow_PRESET_MEDIUM,
+        alpha_fine=5.0,
+        alpha_smooth=10.0,
+        delta=0.2,
+        gamma=0.8,
+        iterations=200,
+        finest_scale=0,
+    ):
+        super().__init__()
+        self._of_fine = cv2.DISOpticalFlow.create(preset)
+        self._of_smooth = cv2.DISOpticalFlow.create(preset)
+        for of_inst, alpha in (
+            (self._of_fine, alpha_fine),
+            (self._of_smooth, alpha_smooth),
+        ):
+            of_inst.setUseSpatialPropagation(True)
+            of_inst.setFinestScale(finest_scale)
+            of_inst.setVariationalRefinementDelta(delta)
+            of_inst.setVariationalRefinementGamma(gamma)
+            of_inst.setVariationalRefinementAlpha(alpha)
+            of_inst.setVariationalRefinementIterations(iterations)
+
+    def calc(self, ref, frame, last_flow=None) -> Tuple[np.ndarray, np.ndarray]:
+        last_fine = None
+        last_smooth = None
+        if isinstance(last_flow, (tuple, list)):
+            last_fine = last_flow[0] if len(last_flow) > 0 else None
+            last_smooth = last_flow[1] if len(last_flow) > 1 else None
+        else:
+            last_fine = last_flow
+            last_smooth = last_flow
+
+        w_fine = self._of_fine.calc(ref, frame, last_fine)
+        w_smooth = self._of_smooth.calc(ref, frame, last_smooth)
+        return w_fine, w_smooth
 
 
 class BasicMagnifier:
@@ -562,6 +633,137 @@ class OnlineLandmarkMagnifier(BasicMagnifier):
             cv2.circle(lm_viz, (int(np.round(x)), int(np.round(y))), 5, (0, 0, 255), -1)
 
         return lm_viz, self.ref
+
+
+class SmoothnessDecomposer:
+    """Two-flow decomposer using DIS with different smoothness weights."""
+
+    def __init__(
+        self,
+        alpha_fine=5.0,
+        alpha_smooth=10.0,
+        magnification=25.0,
+        phi_alpha=2.0,
+        phi_beta=0.8,
+        phi_eps=1e-3,
+        iterations=200,
+        augmentor=None,
+        warper_factory=None,
+    ):
+        self.alpha_fine = alpha_fine
+        self.alpha_smooth = alpha_smooth
+        self.magnification = magnification
+        self.phi_alpha = phi_alpha
+        self.phi_beta = phi_beta
+        self.phi_eps = phi_eps
+        self.iterations = iterations
+        self._augmentor = augmentor if augmentor is not None else gray_augmentor
+        self._warper_factory = warper_factory or (lambda hw: OnlineFrameWarper(hw))
+        self._warper = None
+
+        self.ref = None
+        self.last_flow_fine = None
+        self.last_flow_smooth = None
+
+        self.dis_fine = self.__build_dis(self.alpha_fine, self.iterations)
+        self.dis_smooth = self.__build_dis(self.alpha_smooth, self.iterations)
+
+    def __build_dis(self, alpha, iterations):
+        dis = cv2.DISOpticalFlow.create(cv2.DISOpticalFlow_PRESET_MEDIUM)
+        dis.setUseSpatialPropagation(True)
+        dis.setFinestScale(0)
+        dis.setVariationalRefinementIterations(iterations)
+        dis.setVariationalRefinementAlpha(alpha)
+        dis.setVariationalRefinementDelta(0.2)
+        dis.setVariationalRefinementGamma(0.8)
+        return dis
+
+    def update_reference(self, ref):
+        self.ref = ref
+        if self._warper is None:
+            self._warper = self._warper_factory(ref.shape[:2])
+
+    def __magnitude_scale(self, flow, alpha_scale, beta, eps):
+        mag = np.sqrt(np.sum(np.array(flow, dtype=np.float32) ** 2, axis=2))
+        denom = np.maximum(mag, eps)
+        gain = np.power(alpha_scale, beta) * np.power(denom, -beta)
+        gain[gain < 1.0] = 1.0
+        return flow * gain[:, :, None], gain
+
+    def decompose(self, frame):
+        """Return flow with low smoothness and its residual to the smooth flow."""
+        if self.ref is None:
+            self.update_reference(frame)
+            return None
+
+        ref_img = self._augmentor(self.ref)
+        frame_img = self._augmentor(frame)
+
+        flow_fine = self.dis_fine.calc(ref_img, frame_img, self.last_flow_fine)
+        flow_smooth = self.dis_smooth.calc(ref_img, frame_img, self.last_flow_smooth)
+
+        self.last_flow_fine = flow_fine
+        self.last_flow_smooth = flow_smooth
+
+        flow_local = flow_fine - flow_smooth
+
+        return flow_fine, flow_local, flow_smooth
+
+    def __call__(
+        self,
+        frame,
+        magnification=None,
+        phi_alpha=None,
+        phi_beta=None,
+        phi_eps=None,
+        depth=None,
+        return_all=False,
+    ):
+        if self._warper is None:
+            self._warper = self._warper_factory(frame.shape[:2])
+
+        decomposed = self.decompose(frame)
+        if decomposed is None:
+            return frame
+
+        flow_fine, flow_local, flow_smooth = decomposed
+
+        a_lin = self.magnification if magnification is None else magnification
+        flow_lin_all = a_lin * flow_fine
+        flow_lin_decomp = flow_smooth + a_lin * flow_local
+
+        a_phi = self.phi_alpha if phi_alpha is None else phi_alpha
+        b_phi = self.phi_beta if phi_beta is None else phi_beta
+        e_phi = self.phi_eps if phi_eps is None else phi_eps
+
+        flow_scaled_all, gain_all = self.__magnitude_scale(
+            flow_lin_all, a_phi, b_phi, e_phi
+        )
+        flow_scaled_decomp, gain_decomp = self.__magnitude_scale(
+            flow_lin_decomp, a_phi, b_phi, e_phi
+        )
+
+        base = warp_image_backwards(frame, flow_fine)
+        warp_all = self._warper.warp_image_uv(base, flow_scaled_all, depth)
+        warp_decomp = self._warper.warp_image_uv(base, flow_scaled_decomp, depth)
+
+        if return_all:
+            return (
+                warp_decomp,
+                warp_all,
+                {
+                    "flow_global": flow_fine,
+                    "flow_local": flow_local,
+                    "flow_smooth": flow_smooth,
+                    "flow_scaled_all": flow_scaled_all,
+                    "flow_scaled_decomp": flow_scaled_decomp,
+                    "gain_all": gain_all,
+                    "gain_decomp": gain_decomp,
+                    "warp_base": base,
+                },
+            )
+
+        return warp_decomp
 
 
 class OnlineMotionMagnifier:
