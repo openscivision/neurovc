@@ -38,6 +38,21 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+contrib = [
+    "configobj>=5.0.8",
+    "dominate>=2.7.0",
+    "easydict>=1.10.0",
+    "einops>=0.4.1",
+    "gdown>=4.7.1",
+    "matplotlib>=3.5.0",
+    "omegaconf>=2.3.0",
+    "tensorboard>=2.11.2",
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "tqdm>=4.64.0",
+    "gdown>=5.2.0"
+
+]
 landmark = [
     "requests>=2.32.0",
     "tqdm>=4.0.0",
