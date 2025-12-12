@@ -3,8 +3,8 @@ import torch
 import torch.nn as nn
 from einops import repeat, rearrange
 
-from models.model_zoo import UNet
-from losses import MMLoss
+from neurovc.contrib.flowmag.models.model_zoo import UNet
+from neurovc.contrib.flowmag.losses import MMLoss
 
 
 class MotionMagModel(nn.Module):

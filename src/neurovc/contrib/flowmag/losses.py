@@ -1,6 +1,7 @@
 import torch.nn as nn
-from flow_utils import normalize_flow, warp
 from einops import rearrange, repeat
+
+from neurovc.contrib.flowmag.flow_utils import normalize_flow, warp
 
 
 class MMLoss(nn.Module):
@@ -9,13 +10,13 @@ class MMLoss(nn.Module):
 
         # Choose RAFT to calculate flow
         if config.train.flow_model == "raft":
-            from flow_utils import RAFT
+            from neurovc.contrib.flowmag.flow_utils import RAFT
 
             self.flow_net = RAFT(num_iters=config.train.raft_iters)
 
         # Choose ARFlow to calculate flow
         elif config.train.flow_model == "arflow":
-            from flow_utils import ARFlow
+            from neurovc.contrib.flowmag.flow_utils import ARFlow
 
             self.flow_net = ARFlow()
 

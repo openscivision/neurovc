@@ -2,34 +2,25 @@ import torch
 import torch.nn as nn
 from einops import rearrange, repeat
 
+from neurovc.contrib.flowmag.flow_utils import GMFlow, PWC, RAFT
+
 
 class Metrics(nn.Module):
     def __init__(self, config):
         super().__init__()
 
-        # Choose RAFT to calculate flow for metrics
+        # Choose flow model to calculate metrics
         if config.train.flow_model == "raft":
             print("using RAFT")
-            from flow_utils import RAFT
-
             self.flow_net = RAFT(
                 model=config.train.flow_model_type, num_iters=config.train.raft_iters
             )
-
-        # Choose GMFlow to calculate flow for metrics
         elif config.train.flow_model == "gmflow":
             print("using GMFlow")
-            from flow_utils import GMFlow
-
             self.flow_net = GMFlow(model=config.train.flow_model_type)
-
-        # Choose PWCNet to calculate flow for metrics
         elif config.train.flow_model == "pwcnet":
             print("using PWCNet")
-            from flow_utils import PWC
-
             self.flow_net = PWC()
-
         else:
             raise NotImplementedError
 

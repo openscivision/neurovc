@@ -1,17 +1,17 @@
 import argparse
-from tqdm import tqdm
 from pathlib import Path
-from omegaconf import OmegaConf
-import numpy as np
-import matplotlib.pyplot as plt
 
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 import torch.nn as nn
+from omegaconf import OmegaConf
 from torchvision.utils import save_image
+from tqdm import tqdm
 
-from dataset import TrainingFramesDataset, FramesDataset
-from test_time_adapt import test_time_adapt
-from myutils import get_our_model, write_video, dist_transform
+from neurovc.contrib.flowmag.dataset import FramesDataset, TrainingFramesDataset
+from neurovc.contrib.flowmag.myutils import dist_transform, get_our_model, write_video
+from neurovc.contrib.flowmag.test_time_adapt import test_time_adapt
 
 
 def inference(

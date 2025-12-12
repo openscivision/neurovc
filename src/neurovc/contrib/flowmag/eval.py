@@ -4,17 +4,17 @@ Actual evaluation is done by another script
 """
 
 import argparse
-from tqdm import tqdm
 from pathlib import Path
-from omegaconf import OmegaConf
+
 import numpy as np
-
 import torch
+from omegaconf import OmegaConf
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
-from dataset import get_dataloader
-from metrics import Metrics
-from myutils import AverageMeter, get_our_model
+from neurovc.contrib.flowmag.dataset import get_dataloader
+from neurovc.contrib.flowmag.metrics import Metrics
+from neurovc.contrib.flowmag.myutils import AverageMeter, get_our_model
 
 
 def test(args, model, save_dir):

@@ -12,7 +12,7 @@ import numpy as np
 sys.path.append(".")
 
 from html_utils import HTML, save_gif
-from flow_utils import RAFT
+from neurovc.contrib.flowmag.flow_utils import RAFT
 
 
 def get_relative_path(path, data_root):

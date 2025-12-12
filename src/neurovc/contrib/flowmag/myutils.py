@@ -1,11 +1,12 @@
-from omegaconf import OmegaConf
 import cv2
 import numpy as np
 import torch
 import torch.nn as nn
-from torchvision.utils import save_image, make_grid
 from einops import rearrange
-from model import MotionMagModel
+from omegaconf import OmegaConf
+from torchvision.utils import make_grid, save_image
+
+from neurovc.contrib.flowmag.model import MotionMagModel
 
 
 class AverageMeter(object):

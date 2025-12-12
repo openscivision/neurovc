@@ -5,12 +5,12 @@ Utilities for flow prediction, including:
     flow clipping
 """
 
-import pathlib
 import argparse
+import math
+import pathlib
 
 import torch
 import torch.nn as nn
-import math
 import torch.nn.functional as F
 
 
@@ -18,7 +18,7 @@ class RAFT(nn.Module):
     def __init__(self, model="things", num_iters=5, dropout=0):
         super(RAFT, self).__init__()
 
-        from flow_models.raft import raft
+        from neurovc.contrib.flowmag.flow_models.raft import raft
 
         if model == "things":
             model = "raft-things.pth"
@@ -60,7 +60,7 @@ class ARFlow(nn.Module):
     def __init__(self):
         super(ARFlow, self).__init__()
 
-        from flow_models.ARFlow.models.pwclite import PWCLite
+        from neurovc.contrib.flowmag.flow_models.ARFlow.models.pwclite import PWCLite
         from easydict import EasyDict
         from utils.torch_utils import restore_model
 
@@ -91,7 +91,7 @@ class GMFlow(nn.Module):
     def __init__(self, model="things"):
         super(GMFlow, self).__init__()
 
-        from flow_models.gmflow import gmflow
+        from neurovc.contrib.flowmag.flow_models.gmflow import gmflow
 
         if model == "sintel":
             model = "gmflow_sintel-0c07dcb3.pth"
@@ -141,7 +141,7 @@ class PWC(nn.Module):
     def __init__(self):
         super(PWC, self).__init__()
 
-        from flow_models.pwcnet.pwc import Network
+        from neurovc.contrib.flowmag.flow_models.pwcnet.pwc import Network
 
         self.flowNet = Network().eval().cpu()
 

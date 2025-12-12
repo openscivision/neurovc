@@ -1,13 +1,11 @@
-from tqdm import tqdm
-
+import matplotlib.pyplot as plt
 import torch
 from torch.optim import Adam
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
-from dataset import TestTimeAdaptDataset
-from myutils import AverageMeter
-
-import matplotlib.pyplot as plt
+from neurovc.contrib.flowmag.dataset import TestTimeAdaptDataset
+from neurovc.contrib.flowmag.myutils import AverageMeter
 
 
 def test_time_adapt(

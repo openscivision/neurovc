@@ -24,7 +24,7 @@ class _ModelDownloader:
         base_dir = (
             Path(save_dir)
             if save_dir is not None
-            else Path(__file__).resolve().parent.parent / "checkpoints"
+            else Path("~/.neurovc/models/flowmag")
         )
         self.save_dir = base_dir.expanduser()
         target = _FILE_TARGETS.get(model_name, f"{model_name}.pth")

@@ -1,23 +1,27 @@
+import argparse
+import logging
+import os
 import shutil
 import sys
-import argparse
-from tqdm import tqdm
-from omegaconf import OmegaConf
-from pathlib import Path
-import logging
 from datetime import datetime
+from pathlib import Path
 
 import torch
-import os
 import torch.nn as nn
-from torch.utils.tensorboard import SummaryWriter
+from omegaconf import OmegaConf
 from torch.optim import Adam
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
+from tqdm import tqdm
 
-from model import MotionMagModel
-from dataset import TrainingFramesDataset, RepeatDataset, get_dataloader
-from myutils import AverageMeter, log_images
-from inference import inference
+from neurovc.contrib.flowmag.dataset import (
+    RepeatDataset,
+    TrainingFramesDataset,
+    get_dataloader,
+)
+from neurovc.contrib.flowmag.inference import inference
+from neurovc.contrib.flowmag.model import MotionMagModel
+from neurovc.contrib.flowmag.myutils import AverageMeter, log_images
 
 
 # Load args and config

@@ -9,6 +9,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from omegaconf import OmegaConf
+from pathlib import Path
 
 from neurovc.contrib.flowmag.model import MotionMagModel
 
@@ -87,14 +88,30 @@ def _crop_to_multiple(
 
 def load_flowmag_model(
     *,
-    config_path: str,
+    config_path: str | None = None,
     checkpoint_path: str,
     device: str | torch.device = "cuda",
     training: bool = False,
 ) -> Tuple[nn.Module, float, Optional[int]]:
     """Build and load a FlowMag model; returns (model, max_alpha, epoch)."""
-    config = OmegaConf.load(config_path)
-    config.config = config_path
+    if config_path is None or not Path(config_path).exists():
+        # fall back to packaged default config
+        import neurovc.contrib.flowmag as flowmag_pkg
+
+        default_cfg = (
+            Path(flowmag_pkg.__file__).resolve().parent
+            / "configs"
+            / "alpha16.color10.yaml"
+        )
+        if not default_cfg.exists():
+            raise FileNotFoundError(
+                f"Could not find FlowMag config at '{config_path}' "
+                f"or default '{default_cfg}'"
+            )
+        config_path = str(default_cfg)
+
+    config = OmegaConf.load(str(config_path))
+    config.config = str(config_path)
     config.train.ngpus = 1
     config.train.is_training = bool(training)
     config.data.batch_size = 1
