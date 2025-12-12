@@ -85,16 +85,17 @@ and for using compressive function approaches:
   ```
 
 
-**3. Thermal landmarks:**
+**3. Dense and sparse thermal landmarks:**
 
-  > Flotho, P., Piening, M., Kukleva, A., & Steidl, G. (2024). T-FAKE: Synthesizing Thermal Images for Facial Landmarking. arXiv preprint arXiv:2408.15127.
+  > Flotho, P., Piening, M., Kukleva, A., & Steidl, G. (2025). T-FAKE: Synthesizing Thermal Images for Facial Landmarking. In Proceedings of the Computer Vision and Pattern Recognition Conference (pp. 26356–26366).
 
   ```bibtex
-  @article{flotho2024t,
+  @inproceedings{flotho2025t,
     title={T-FAKE: Synthesizing Thermal Images for Facial Landmarking},
     author={Flotho, Philipp and Piening, Moritz and Kukleva, Anna and Steidl, Gabriele},
-    journal={arXiv preprint arXiv:2408.15127},
-    year={2024}
+    booktitle={Proceedings of the Computer Vision and Pattern Recognition Conference},
+    pages={26356--26366},
+    year={2025}
   }
   ```
 
@@ -132,6 +133,8 @@ This distribution bundles selected research code from external projects. Please 
   }
   ```
 
+The FlowMag implementation is provided in `neurovc.contrib.flowmag` (MIT; see `src/neurovc/contrib/flowmag/LICENSE`). Supporting helpers live in `neurovc.contrib.flowmag_util`.
+
 **Thermal face detection (TFW)**:
 
   > Kuzdeuov, A., Aubakirova, D., Koishigarina, D., & Varol, H. A. (2022). TFW: Annotated Thermal Faces in the Wild Dataset. *IEEE Transactions on Information Forensics and Security*, 17, 2084–2094. https://doi.org/10.1109/TIFS.2022.3177949
@@ -150,6 +153,7 @@ This distribution bundles selected research code from external projects. Please 
 
 ### Licensing Notice:
 This project contains code derived from RAFT, which is licensed under the BSD 3-Clause License. See `neurovc/raft/LICENSE` for details.
+The FlowMag contrib module (`neurovc.contrib.flowmag`) is distributed under the MIT License; see `src/neurovc/contrib/flowmag/LICENSE`.
 The rest of this project is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 1.0 license (CC BY-NC-SA 1.0). See `LICENSE` for details.
 
-When using or redistributing this project, you must comply with both licenses.
+When using or redistributing this project, you must comply with each respective license.
