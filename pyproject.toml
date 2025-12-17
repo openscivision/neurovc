@@ -54,9 +54,8 @@ contrib = [
 
 ]
 landmark = [
-    "requests>=2.32.0",
     "tqdm>=4.0.0",
-    "yolov5-face==0.0.1a1",
+    "yolov5-face>=0.0.1",
     "torch>=2.4.0",
     "timm",
     "torchvision",
