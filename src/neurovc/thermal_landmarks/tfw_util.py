@@ -21,6 +21,22 @@ except ModuleNotFoundError:
     yf = None
     HAS_YOLOV5_FACE = False
 
+try:
+    import requests
+
+    HAS_REQUESTS = True
+except ModuleNotFoundError:
+    requests = None
+    HAS_REQUESTS = False
+
+try:
+    from tqdm import tqdm
+
+    HAS_TQDM = True
+except ModuleNotFoundError:
+    tqdm = None
+    HAS_TQDM = False
+
 
 class _ModelDownloader:
     def __init__(
@@ -129,6 +145,8 @@ _file_targets = {
 __all__ = [
     "HAS_TORCH",
     "HAS_YOLOV5_FACE",
+    "HAS_REQUESTS",
+    "HAS_TQDM",
     "TFWLandmarker",
     "LandmarkWrapper",
 ]
