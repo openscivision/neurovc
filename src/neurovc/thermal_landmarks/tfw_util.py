@@ -8,7 +8,6 @@ import numpy as np
 
 from neurovc.util import normalize_color
 
-HAS_TORCH = importlib.util.find_spec("torch") is not None
 HAS_YOLOV5_FACE = importlib.util.find_spec("yolov5_face") is not None
 HAS_GDOWN = importlib.util.find_spec("gdown") is not None
 
@@ -97,23 +96,29 @@ class LandmarkWrapper:
 
 
 class TFWLandmarker(LandmarkWrapper):
-    def __init__(self, model_name="YOLOv5n-Face.modern"):
-        torch = require("torch", extra="torch", purpose="TFWLandmarker")
+    def __init__(self, model_name="YOLOv5n-Face.modern", device=None):
         yf = require(
             "yolov5_face.detect_face", extra="landmark", purpose="TFWLandmarker"
         )
 
-        self._torch = torch
         self._yf = yf
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = device
         model_path = _prepare_model(model_name)
-        self.model = yf.load_model(model_path, self.device)
+        self.model = (
+            yf.load_model(model_path, self.device)
+            if device
+            else yf.load_model(model_path)
+        )
 
     def detect(self, img):
         img = normalize_color(img, color_map=cv2.COLORMAP_BONE)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        return self._yf.detect_landmarks(self.model, img, self.device)
+        return (
+            self._yf.detect_landmarks(self.model, img, self.device)
+            if self.device
+            else self._yf.detect_landmarks(self.model, img)
+        )
 
     def get_landmarks(self, img):
         results = self.detect(img)
@@ -141,7 +146,6 @@ _file_targets = {
 
 
 __all__ = [
-    "HAS_TORCH",
     "HAS_YOLOV5_FACE",
     "HAS_GDOWN",
     "OptionalDependencyError",

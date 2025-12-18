@@ -51,15 +51,8 @@ contrib = [
     "torchvision>=0.15.0",
 ]
 landmark = [
-    "tqdm>=4.0.0",
     "yolov5-face>=0.0.1",
-    "torch>=2.4.0",
-    "timm",
-    "torchvision",
     "gdown>=5.2.0",
-]
-torch = [
-    "torch>=2.4.0",
 ]
 test = [
     "pytest>=8.0.0",
