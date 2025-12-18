@@ -1,11 +1,9 @@
 from . import tfw_util as _tfw_util
 
-HAS_TORCH = _tfw_util.HAS_TORCH
 HAS_YOLOV5_FACE = _tfw_util.HAS_YOLOV5_FACE
 HAS_GDOWN = _tfw_util.HAS_GDOWN
 
 __all__ = [
-    "HAS_TORCH",
     "HAS_YOLOV5_FACE",
     "HAS_GDOWN",
     *_tfw_util.__all__,
