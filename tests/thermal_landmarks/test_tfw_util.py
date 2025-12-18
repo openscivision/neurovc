@@ -1,4 +1,3 @@
-import sys
 import types
 from pathlib import Path
 
@@ -13,9 +12,13 @@ def test_model_downloader_uses_gdown(monkeypatch, tmp_path):
         Path(output).write_bytes(b"weights")
         return output
 
-    fake_gdown = types.ModuleType("gdown")
-    fake_gdown.download = fake_download
-    monkeypatch.setitem(sys.modules, "gdown", fake_gdown)
+    fake_gdown = types.SimpleNamespace(download=fake_download)
+
+    def fake_require(module: str, *, extra: str, purpose: str):
+        assert module == "gdown"
+        return fake_gdown
+
+    monkeypatch.setattr(tfw_util, "require", fake_require)
 
     downloader = tfw_util._ModelDownloader("YOLOv5n-Face.modern", save_dir=tmp_path)
     model_path = downloader.download_model()
@@ -43,12 +46,10 @@ def test_model_downloader_skips_existing_file(monkeypatch, tmp_path):
     existing_license = tmp_path / tfw_util._file_targets["license"]
     existing_license.write_text("preexisting license", encoding="utf-8")
 
-    def fail_download(*args, **kwargs):  # pragma: no cover - would signal a bug
-        raise AssertionError("gdown should not be called when file exists")
+    def fail_require(*args, **kwargs):  # pragma: no cover - would signal a bug
+        raise AssertionError("require() should not be called when files exist")
 
-    fake_gdown = types.ModuleType("gdown")
-    fake_gdown.download = fail_download
-    monkeypatch.setitem(sys.modules, "gdown", fake_gdown)
+    monkeypatch.setattr(tfw_util, "require", fail_require)
 
     downloader = tfw_util._ModelDownloader("YOLOv5n-Face.modern", save_dir=tmp_path)
     model_path = downloader.download_model()
@@ -75,17 +76,22 @@ def test_tfw_landmarker_init_loads_model(monkeypatch, tmp_path):
         def is_available():
             return False
 
-    dummy_torch = types.SimpleNamespace(device=lambda value: value, cuda=DummyCuda)
-    monkeypatch.setattr(tfw_util, "torch", dummy_torch, raising=False)
-    monkeypatch.setattr(tfw_util, "HAS_TORCH", True, raising=False)
-
     def fake_load_model(path, device):
         calls["load_model"] = {"path": Path(path), "device": device}
         return "MODEL"
 
+    dummy_torch = types.SimpleNamespace(device=lambda value: value, cuda=DummyCuda)
     dummy_yf = types.SimpleNamespace(load_model=fake_load_model)
-    monkeypatch.setattr(tfw_util, "yf", dummy_yf, raising=False)
-    monkeypatch.setattr(tfw_util, "HAS_YOLOV5_FACE", True, raising=False)
+
+    def fake_require(module: str, *, extra: str, purpose: str):
+        calls.setdefault("require", []).append((module, extra, purpose))
+        if module == "torch":
+            return dummy_torch
+        if module == "yolov5_face.detect_face":
+            return dummy_yf
+        raise AssertionError(f"Unexpected require() call: {module}")
+
+    monkeypatch.setattr(tfw_util, "require", fake_require)
 
     landmarker = tfw_util.TFWLandmarker(model_name="YOLOv5n-Face.modern")
 

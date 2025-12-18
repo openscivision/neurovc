@@ -1,41 +1,45 @@
+import importlib
+import importlib.util
 from pathlib import Path
+from types import ModuleType
 
 import cv2
 import numpy as np
 
 from neurovc.util import normalize_color
 
-try:
-    import torch
+HAS_TORCH = importlib.util.find_spec("torch") is not None
+HAS_YOLOV5_FACE = importlib.util.find_spec("yolov5_face") is not None
+HAS_GDOWN = importlib.util.find_spec("gdown") is not None
 
-    HAS_TORCH = True
-except ModuleNotFoundError:
-    torch = None
-    HAS_TORCH = False
 
-try:
-    import yolov5_face.detect_face as yf
+class OptionalDependencyError(ImportError):
+    pass
 
-    HAS_YOLOV5_FACE = True
-except ModuleNotFoundError:
-    yf = None
-    HAS_YOLOV5_FACE = False
 
-try:
-    import requests
+def require(module: str, *, extra: str, purpose: str) -> ModuleType:
+    root = module.split(".", 1)[0]
+    root_spec = importlib.util.find_spec(root)
+    if root_spec is None:
+        raise OptionalDependencyError(
+            f"Missing optional dependency '{root}' required for {purpose}. "
+            f"Install via `pip install neurovc[{extra}]`."
+        )
 
-    HAS_REQUESTS = True
-except ModuleNotFoundError:
-    requests = None
-    HAS_REQUESTS = False
-
-try:
-    from tqdm import tqdm
-
-    HAS_TQDM = True
-except ModuleNotFoundError:
-    tqdm = None
-    HAS_TQDM = False
+    try:
+        return importlib.import_module(module)
+    except ModuleNotFoundError as exc:
+        raise OptionalDependencyError(
+            f"Dependency '{root}' is installed, but importing '{module}' failed "
+            f"(likely incompatible/partial install). "
+            f"Try `pip install -U --force-reinstall {root}`. "
+            f"Original error: {exc.__class__.__name__}: {exc}"
+        ) from exc
+    except Exception as exc:
+        raise OptionalDependencyError(
+            f"Dependency '{module}' was found but failed to import (broken binary/env). "
+            f"Original error: {exc.__class__.__name__}: {exc}"
+        ) from exc
 
 
 class _ModelDownloader:
@@ -68,13 +72,7 @@ class _ModelDownloader:
         if output_path.exists():
             return output_path
 
-        try:
-            import gdown
-        except ImportError as exc:  # pragma: no cover - import guard
-            raise ImportError(
-                "gdown is required to download TFW checkpoints. "
-                "Install it via 'pip install gdown'."
-            ) from exc
+        gdown = require("gdown", extra="landmark", purpose="TFW model download")
 
         url = f"https://drive.google.com/uc?export=download&id={file_id}"
         gdown.download(url, str(output_path), quiet=False)
@@ -100,22 +98,21 @@ class LandmarkWrapper:
 
 class TFWLandmarker(LandmarkWrapper):
     def __init__(self, model_name="YOLOv5n-Face.modern"):
-        if not HAS_TORCH:
-            raise ImportError(
-                "torch is required for TFWLandmarker. Install the torch extra: 'pip install neurovc[torch]'"
-            )
-        if not HAS_YOLOV5_FACE:
-            raise ImportError(
-                "yolov5-face is required for TFWLandmarker. Install the landmark extra: 'pip install neurovc[landmark]'"
-            )
+        torch = require("torch", extra="torch", purpose="TFWLandmarker")
+        yf = require(
+            "yolov5_face.detect_face", extra="landmark", purpose="TFWLandmarker"
+        )
+
+        self._torch = torch
+        self._yf = yf
+
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model_path = _prepare_model(model_name)
         self.model = yf.load_model(model_path, self.device)
 
     def detect(self, img):
         img = normalize_color(img, color_map=cv2.COLORMAP_BONE)
-        results = yf.detect_landmarks(self.model, img, self.device)
-        return results
+        return self._yf.detect_landmarks(self.model, img, self.device)
 
     def get_landmarks(self, img):
         results = self.detect(img)
@@ -145,8 +142,9 @@ _file_targets = {
 __all__ = [
     "HAS_TORCH",
     "HAS_YOLOV5_FACE",
-    "HAS_REQUESTS",
-    "HAS_TQDM",
+    "HAS_GDOWN",
+    "OptionalDependencyError",
+    "require",
     "TFWLandmarker",
     "LandmarkWrapper",
 ]
