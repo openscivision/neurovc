@@ -51,7 +51,7 @@ contrib = [
     "torchvision>=0.15.0",
 ]
 landmark = [
-    "yolov5-face>=0.0.1",
+    "yolov5-face>=0.0.2a2",
     "gdown>=5.2.0",
 ]
 test = [
