@@ -107,7 +107,7 @@ class TFWLandmarker(LandmarkWrapper):
         model_path = _prepare_model(model_name)
         self.model = (
             yf.load_model(model_path, self.device)
-            if device
+            if self.device
             else yf.load_model(model_path)
         )
 

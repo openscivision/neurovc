@@ -76,7 +76,7 @@ def test_tfw_landmarker_init_loads_model(monkeypatch, tmp_path):
         def is_available():
             return False
 
-    def fake_load_model(path, device):
+    def fake_load_model(path, device=None):
         calls["load_model"] = {"path": Path(path), "device": device}
         return "MODEL"
 
@@ -97,6 +97,6 @@ def test_tfw_landmarker_init_loads_model(monkeypatch, tmp_path):
 
     assert calls["prepare_model"] == "YOLOv5n-Face.modern"
     assert calls["load_model"]["path"] == model_path
-    assert calls["load_model"]["device"] == "cpu"
-    assert landmarker.device == "cpu"
+    assert calls["load_model"]["device"] is None
+    assert landmarker.device is None
     assert landmarker.model == "MODEL"
