@@ -112,6 +112,7 @@ class TFWLandmarker(LandmarkWrapper):
 
     def detect(self, img):
         img = normalize_color(img, color_map=cv2.COLORMAP_BONE)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         return self._yf.detect_landmarks(self.model, img, self.device)
 
     def get_landmarks(self, img):
