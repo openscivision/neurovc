@@ -14,7 +14,7 @@ license = { text = "CC BY-NC-SA 4.0" }
 requires-python = ">=3.10,<3.13"
 
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
     "License :: Other/Proprietary License",
     "Operating System :: OS Independent",
@@ -22,19 +22,15 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Multimedia :: Video",
     "Topic :: Scientific/Engineering :: Image Processing",
-    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Image Recognition",
 ]
 
 dependencies = [
     "numpy>=1.24.0",
     "opencv-contrib-python>=4.10.0",
-    "scipy>=1.10.0",
-    "numba>=0.58.0",
-    "Pillow>=10.2.0",
-    "h5py>=3.11.0",
-    "moderngl>=5.12.0",
-    "mediapipe>=0.10.0",
 ]
 
 [project.optional-dependencies]
@@ -49,10 +45,18 @@ contrib = [
     "tensorboard>=2.11.2",
     "torch>=2.0.0",
     "torchvision>=0.15.0",
+    "Pillow>=10.2.0",
 ]
 landmark = [
-    "yolov5-face>=0.0.2a2",
+    "yolov5-face>=0.0.2",
     "gdown>=5.2.0",
+]
+momag = [
+    "moderngl>=5.12.0",
+    "mediapipe>=0.10.0",
+    "scipy>=1.10.0",
+    "numba>=0.58.0",
+    "h5py>=3.11.0",
 ]
 test = [
     "pytest>=8.0.0",

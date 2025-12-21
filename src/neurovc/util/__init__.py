@@ -1,2 +1,1 @@
-from .IO_util import *
-from .hdf_video import synchronize_timestamps
+from .IO_util import *  # noqa: F403

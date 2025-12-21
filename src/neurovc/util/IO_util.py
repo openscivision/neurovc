@@ -3,10 +3,9 @@ __author__ = "Philipp Flotho"
 multimodal_cam_calib
 Copyright 2021 by Philipp Flotho, All rights reserved.
 """
-import numpy as np
-import cv2
-from h5py import File
-import os
+import numpy as np  # noqa: E402
+import cv2  # noqa: E402
+import os  # noqa: E402
 
 
 class VideoLooper:
@@ -15,13 +14,13 @@ class VideoLooper:
 
     def __call__(self, keystroke):
         keystroke &= 0xFF
-        if keystroke == ord(' '):
+        if keystroke == ord(" "):
             while True:
                 keystroke = cv2.waitKey() & 0xFF
                 if keystroke == 27:
                     self.stop = True
                     break
-                if keystroke == ord(' '):
+                if keystroke == ord(" "):
                     break
         return keystroke == 27 or self.stop
 
@@ -69,7 +68,10 @@ class VideoReader:
         return ret, frame
 
     def has_frames(self):
-        return self.cap.isOpened() and self.cap.get(cv2.CAP_PROP_POS_FRAMES) < self.n_frames
+        return (
+            self.cap.isOpened()
+            and self.cap.get(cv2.CAP_PROP_POS_FRAMES) < self.n_frames
+        )
 
     def read_frames(self, start_idx=0, end_idx=-1, offset=1):
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, start_idx)
@@ -85,41 +87,58 @@ class VideoReader:
 
     def __getitem__(self, item):
         if isinstance(item, slice):
-            start = item.start
-            stop = item.stop
-            step = item.step if item.step is not None else 1
-        else:
-            start = item
-            stop = item
-            step = 1
+            start, stop, step = item.indices(int(self.n_frames))
+            success, frames = self.read_frames(
+                start_idx=start, end_idx=stop, offset=step
+            )
+            return frames if success else np.array([])
+        if isinstance(item, int):
+            idx = item
+            if idx < 0:
+                idx = int(self.n_frames) + idx
+            ret, frame = self.read_frame(idx)
+            return frame if ret else None
+        raise TypeError("VideoReader indices must be integers or slices.")
 
 
 class HDFFileVideoWriter:
     def __init__(self, filepath="output.h5", ds_names=("Frames",)):
+        try:
+            from h5py import File as _File
+        except ImportError as exc:
+            raise ImportError(
+                "h5py is required for HDFFileVideoWriter. "
+                "Install via `pip install h5py` or `pip install neurovc[momag]`."
+            ) from exc
+        self._File = _File
         self.__init = False
         self.ds_names = ds_names
         try:
             os.remove(filepath)
-        except:
+        except OSError:
             pass
-        self.file = File(filepath, 'w')
+        self.file = self._File(filepath, "w")
 
     def __call__(self, frames, ts):
-        assert(len(frames) == len(self.ds_names))
+        assert len(frames) == len(self.ds_names)
         if not self.__init:
             for i, frame in enumerate(frames):
-                self.file.create_dataset(self.ds_names[i], (0, ) + frame.shape,
-                                         dtype=frame.dtype, chunks=(1, ) + frame.shape,
-                                         maxshape=(None, ) + frame.shape)
-            self.file.create_dataset("Timestamps", (0, ), chunks=True, maxshape=(None, ))
+                self.file.create_dataset(
+                    self.ds_names[i],
+                    (0,) + frame.shape,
+                    dtype=frame.dtype,
+                    chunks=(1,) + frame.shape,
+                    maxshape=(None,) + frame.shape,
+                )
+            self.file.create_dataset("Timestamps", (0,), chunks=True, maxshape=(None,))
             self.__init = True
 
         for i, frame in enumerate(frames):
             ds = self.file[self.ds_names[i]]
-            ds.resize((ds.shape[0] + 1, ) + ds.shape[1:])
+            ds.resize((ds.shape[0] + 1,) + ds.shape[1:])
             ds[-1] = frame
         ds = self.file["Timestamps"]
-        ds.resize((ds.shape[0] + 1, ))
+        ds.resize((ds.shape[0] + 1,))
         ds[-1] = ts
 
     def __del__(self):
@@ -143,8 +162,12 @@ class VideoWriter:
         if self.writer is None:
             self.height, self.width = frame.shape[:2]
 
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v') #cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
-            self.writer = cv2.VideoWriter(self.filepath, fourcc, self.framerate, (self.width, self.height))
+            fourcc = cv2.VideoWriter_fourcc(
+                *"mp4v"
+            )  # cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
+            self.writer = cv2.VideoWriter(
+                self.filepath, fourcc, self.framerate, (self.width, self.height)
+            )
             # self.writer = cv2.VideoWriter(self.filepath, cv2.VideoWriter_fourcc('D', 'I', 'V', 'X'), self.framerate, (self.width, self.height))
 
         if len(frame.shape) < 3:
@@ -163,7 +186,14 @@ class VideoWriter:
             elif min_val > 0 and max_val < 255:
                 frame = frame.astype(np.uint8)
             else:
-                frame = cv2.normalize(frame, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC3)
+                frame = cv2.normalize(
+                    frame,
+                    None,
+                    alpha=0,
+                    beta=255,
+                    norm_type=cv2.NORM_MINMAX,
+                    dtype=cv2.CV_8UC3,
+                )
         self.writer.write(frame)
 
     def write_frames(self, frames):
@@ -177,21 +207,24 @@ class VideoWriter:
 
 class Debayerer:
     def __init__(self, pattern=cv2.COLOR_BAYER_RG2BGR, nh=2):
-
         self.pattern = pattern
         colors = np.array([255, 255, 255])
 
-        self.reference = np.expand_dims(np.mean(np.array(colors), axis=0).astype(float), (0, 1))
+        self.reference = np.expand_dims(
+            np.mean(np.array(colors), axis=0).astype(float), (0, 1)
+        )
 
     def set_white_balance(self, colors):
         if isinstance(colors, np.ndarray):
             assert np.sum(colors.shape) == 3
         else:
             assert len(colors) == 3
-        self.reference = np.expand_dims(np.mean(np.squeeze(np.array(colors)), axis=0).astype(float), (0, 1))
+        self.reference = np.expand_dims(
+            np.mean(np.squeeze(np.array(colors)), axis=0).astype(float), (0, 1)
+        )
 
     def __call__(self, img):
-        tmp = ((cv2.cvtColor(img, self.pattern).astype(float) / self.reference) * 255)
+        tmp = (cv2.cvtColor(img, self.pattern).astype(float) / self.reference) * 255
         tmp[tmp > 255] = 255
         return tmp.astype(np.uint8)
 
@@ -210,7 +243,9 @@ def imagesc(img, window_name="Imagesc", color_map=cv2.COLORMAP_HOT):
 def normalize_color(img, color_map=cv2.COLORMAP_HOT, normalize=True):
     img_8b = np.empty(img.shape, np.uint8)
     if normalize:
-        cv2.normalize(img, img_8b, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+        cv2.normalize(
+            img, img_8b, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1
+        )
     else:
         img_8b = (255 * img).astype(np.uint8)
     img_8b = cv2.applyColorMap(img_8b, color_map)
