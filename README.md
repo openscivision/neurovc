@@ -2,6 +2,7 @@
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/neurovc)](https://pypi.org/project/neurovc/)
 [![PyPI - License](https://img.shields.io/pypi/l/neurovc)](LICENSE)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/neurovc)](https://pypistats.org/packages/neurovc)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/neurovc?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=all+time+downloads)](https://pepy.tech/projects/neurovc)
 [![Documentation Status](https://readthedocs.org/projects/neurovc/badge/?version=latest)](https://neurovc.readthedocs.io/en/latest/?badge=latest)
 
 ## 🚧 Under Development
